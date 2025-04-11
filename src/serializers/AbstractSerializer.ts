@@ -1,7 +1,7 @@
 import { JSONOutput } from 'typedoc';
 
-export abstract class AbstractSerializer {
+export abstract class AbstractSerializer<T = any> {
     public constructor(public declaration: JSONOutput.DeclarationReflection) {}
 
-    public serialize() {}
+    public abstract serialize(): T;
 }

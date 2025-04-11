@@ -1,12 +1,12 @@
 import { JSONOutput, ReflectionKind } from 'typedoc';
 import { FunctionDeclaration } from 'typescript';
-import { getFileMetadata, getName, parseType, parseTypes } from '../utils';
-import { AbstractSerializer } from './AbstractSerializer';
-import { DocumentedClassMethod, DocumentedParameter } from './ClassSerializer';
+import { getFileMetadata, getName, parseType, parseTypes } from '../utils/index.js';
+import { AbstractSerializer } from './AbstractSerializer.js';
+import { DocumentedClassMethod, DocumentedParameter } from './ClassSerializer.js';
 
 export type DocumentedFunction = DocumentedClassMethod;
 
-export class FunctionSerializer extends AbstractSerializer {
+export class FunctionSerializer extends AbstractSerializer<DocumentedFunction> {
     public serialize(): DocumentedFunction {
         const decl = this.declaration;
         const signature = decl.signatures?.[0] || decl;

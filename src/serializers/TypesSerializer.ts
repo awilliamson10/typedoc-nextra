@@ -1,7 +1,7 @@
 import { ReflectionKind } from 'typedoc';
-import { FileMetadata, getFileMetadata, getName, parseType, parseTypes } from '../utils';
-import { AbstractSerializer } from './AbstractSerializer';
-import { DocumentedClassProperty, DocumentedParameter } from './ClassSerializer';
+import { FileMetadata, getFileMetadata, getName, parseType, parseTypes } from '../utils/index.js';
+import { AbstractSerializer } from './AbstractSerializer.js';
+import { DocumentedClassProperty, DocumentedParameter } from './ClassSerializer.js';
 
 export interface DocumentedTypes {
     name: string;
@@ -23,7 +23,7 @@ export interface DocumentedTypeProperty extends DocumentedClassProperty {
     value: string | null;
 }
 
-export class TypesSerializer extends AbstractSerializer {
+export class TypesSerializer extends AbstractSerializer<DocumentedTypes> {
     public serialize(): DocumentedTypes {
         const base = {
             deprecated: !!this.declaration.comment?.blockTags?.some((r) => r.tag === '@deprecated'),

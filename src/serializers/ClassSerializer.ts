@@ -1,6 +1,6 @@
 import { JSONOutput, ReflectionKind } from 'typedoc';
-import { FileMetadata, getFileMetadata, getName, parseType, parseTypes } from '../utils';
-import { AbstractSerializer } from './AbstractSerializer';
+import { FileMetadata, getFileMetadata, getName, parseType, parseTypes } from '../utils/index.js';
+import { AbstractSerializer } from './AbstractSerializer.js';
 
 export interface DocumentedClass {
     name: string;
@@ -65,7 +65,7 @@ export interface DocumentedClassMethod {
     metadata: FileMetadata | null;
 }
 
-export class ClassSerializer extends AbstractSerializer {
+export class ClassSerializer extends AbstractSerializer<DocumentedClass> {
     public serialize(): DocumentedClass {
         const ctor = this.declaration.children?.find((c) => {
             return c.kind === ReflectionKind.Constructor;

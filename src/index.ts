@@ -27,6 +27,7 @@ export interface TypeDocNextraInit {
     noLinkTypes?: boolean;
     extension?: string;
     links?: TypeDocNextraLink;
+    entryPointPath?: string;
 }
 
 export interface TypeDocNextraCustomFile {
@@ -74,8 +75,17 @@ export async function createDocumentation(options: TypeDocNextraInit): Promise<D
 
     options.noLinkTypes ??= false;
     options.links ??= DefaultLinksFactory;
+    options.entryPointPath ??= '/src/'; // Default to /src/ if not specified
 
     const start = performance.now();
+
+    // Helper function to extract the proper output directory path
+    const getOutputDir = (originalPath: string, entryPoint: string): string => {
+        const entryPointIndex = originalPath.indexOf(entryPoint);
+        return entryPointIndex !== -1 
+            ? originalPath.substring(entryPointIndex + entryPoint.length)
+            : originalPath;
+    };
 
     if (options.jsonInputPath) {
         data = JSON.parse(await readFile(options.jsonInputPath, 'utf-8')) as TypeDoc.JSONOutput.ProjectReflection;
@@ -122,7 +132,7 @@ export async function createDocumentation(options: TypeDocNextraInit): Promise<D
     })();
 
     const mdTransformer = new TypeDocNextra({
-        links: options.links,
+        links: options.links ?? {},
         linker: (t, r) => {
             const { noLinkTypes = false, links = {} } = options;
             if (noLinkTypes) return escape(t);
@@ -266,34 +276,50 @@ export async function createDocumentation(options: TypeDocNextraInit): Promise<D
                 await Promise.all([
                     ...module.classes.flatMap((cl) => {
                         return cl.markdown.map(async (md) => {
-                            const classPath = path.join(options.output!, 'classes', module.name);
-
-                            if (!existsSync(classPath))
-                                await mkdir(classPath, {
+                            if (!md.metadata) return;
+                            
+                            // Extract path relative to entry point
+                            const outputDir = getOutputDir(md.metadata.directory, options.entryPointPath!);
+                            const outputPath = path.join(options.output!, outputDir);
+                            
+                            if (!existsSync(outputPath))
+                                await mkdir(outputPath, {
                                     recursive: true
                                 });
 
-                            await writeFile(path.join(classPath, `${md.name}.${options.extension || 'mdx'}`), md.content);
+                            await writeFile(path.join(outputPath, `${md.name}.${options.extension || 'mdx'}`), md.content);
                         });
                     }),
                     ...module.types.flatMap((cl) => {
                         return cl.markdown.map(async (md) => {
-                            const typesPath = path.join(options.output!, 'types', module.name);
-                            if (!existsSync(typesPath))
-                                await mkdir(typesPath, {
+                            if (!md.metadata) return;
+                            
+                            // Extract path relative to entry point
+                            const outputDir = getOutputDir(md.metadata.directory, options.entryPointPath!);
+                            const outputPath = path.join(options.output!, outputDir);
+                            
+                            if (!existsSync(outputPath))
+                                await mkdir(outputPath, {
                                     recursive: true
                                 });
-                            await writeFile(path.join(typesPath, `${md.name}.${options.extension || 'mdx'}`), md.content);
+
+                            await writeFile(path.join(outputPath, `${md.name}.${options.extension || 'mdx'}`), md.content);
                         });
                     }),
                     ...module.functions.flatMap((cl) => {
                         return cl.markdown.map(async (md) => {
-                            const funcsPath = path.join(options.output!, 'functions', module.name);
-                            if (!existsSync(funcsPath))
-                                await mkdir(funcsPath, {
+                            if (!md.metadata) return;
+                            
+                            // Extract path relative to entry point
+                            const outputDir = getOutputDir(md.metadata.directory, options.entryPointPath!);
+                            const outputPath = path.join(options.output!, outputDir);
+                            
+                            if (!existsSync(outputPath))
+                                await mkdir(outputPath, {
                                     recursive: true
                                 });
-                            await writeFile(path.join(funcsPath, `${md.name}.${options.extension || 'mdx'}`), md.content);
+
+                            await writeFile(path.join(outputPath, `${md.name}.${options.extension || 'mdx'}`), md.content);
                         });
                     })
                 ]);
@@ -322,6 +348,6 @@ export async function createDocumentation(options: TypeDocNextraInit): Promise<D
 }
 
 export default createDocumentation;
-export * from './TypeDocNextra';
-export * from './serializers';
-export * from './utils';
+export * from './TypeDocNextra.js';
+export * from './serializers/index.js';
+export * from './utils/index.js';
