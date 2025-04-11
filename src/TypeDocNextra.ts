@@ -1,7 +1,7 @@
-import { DocumentedClass, DocumentedClassConstructor, DocumentedClassMethod, DocumentedClassProperty, DocumentedFunction, DocumentedTypes } from './serializers';
-import { bold, code, codeBlock, heading, hyperlink, table } from './utils/md';
-import { FileMetadata, escape } from './utils';
-import { TypeDocNextraLink } from '.';
+import { DocumentedClass, DocumentedClassConstructor, DocumentedClassMethod, DocumentedClassProperty, DocumentedFunction, DocumentedTypes } from './serializers/index.js';
+import { bold, code, codeBlock, heading, hyperlink, table } from './utils/md.js';
+import { FileMetadata, escape } from './utils/index.js';
+import { TypeDocNextraLink } from './index.js';
 
 export interface TypeDocNextraMarkdownBuild {
     name: string;

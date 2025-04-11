@@ -2,12 +2,14 @@ import * as TypeDoc from 'typedoc';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import tmp from 'tmp';
 import path from 'path';
-import { ClassSerializer, DocumentedClass, DocumentedFunction, DocumentedTypes, FunctionSerializer, TypesSerializer } from './serializers';
-import { TypeDocNextra, TypeDocNextraMarkdownBuild } from './TypeDocNextra';
-import { escape } from './utils';
-import { hyperlink } from './utils/md';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { ClassSerializer, DocumentedClass, DocumentedFunction, DocumentedTypes, FunctionSerializer, TypesSerializer } from './serializers/index.js';
+import { TypeDocNextra, TypeDocNextraMarkdownBuild } from './TypeDocNextra.js';
+import { escape } from './utils/index.js';
+import { hyperlink } from './utils/md.js';
 import { existsSync } from 'fs';
-import { DefaultLinksFactory } from './utils/links';
+import { DefaultLinksFactory } from './utils/links.js';
 
 export type TypeDocNextraLink = Record<string, string>;
 
@@ -78,11 +80,11 @@ export async function createDocumentation(options: TypeDocNextraInit): Promise<D
     if (options.jsonInputPath) {
         data = JSON.parse(await readFile(options.jsonInputPath, 'utf-8')) as TypeDoc.JSONOutput.ProjectReflection;
     } else if (options.input) {
-        const app = await TypeDoc.Application.bootstrap({
-            plugin: [],
+        const app = await TypeDoc.Application.bootstrapWithPlugins({
             entryPoints: options.input,
             tsconfig: options.tsconfigPath
         });
+
         const tmpOutputPath = path.join(tmp.dirSync().name, 'project-reflection.json');
 
         app.options.addReader(new TypeDoc.TSConfigReader());
@@ -199,38 +201,24 @@ export async function createDocumentation(options: TypeDocNextraInit): Promise<D
             mod.children?.forEach((child) => {
                 switch (child.kind) {
                     case TypeDoc.ReflectionKind.Class:
-                        {
-                            const classSerializer = new ClassSerializer(child);
-                            const serialized = classSerializer.serialize();
-                            currentModule.classes.push({
-                                data: serialized,
-                                markdown: options.markdown ? mdTransformer.transformClass([serialized]) : []
-                            });
-                        }
-                        break;
-                    case TypeDoc.ReflectionKind.Interface:
-                    case TypeDoc.ReflectionKind.TypeAlias:
-                    case TypeDoc.ReflectionKind.Enum:
-                        {
-                            const typesSerializer = new TypesSerializer(child);
-                            const serialized = typesSerializer.serialize();
-
-                            currentModule.types.push({
-                                data: serialized,
-                                markdown: options.markdown ? mdTransformer.transformTypes([serialized]) : []
-                            });
-                        }
+                        currentModule.classes.push({
+                            markdown: mdTransformer.transformClass([new ClassSerializer(child).serialize()]),
+                            data: new ClassSerializer(child).serialize()
+                        });
                         break;
                     case TypeDoc.ReflectionKind.Function:
-                        {
-                            const functionsSerializer = new FunctionSerializer(child);
-                            const serialized = functionsSerializer.serialize();
-
-                            currentModule.functions.push({
-                                data: serialized,
-                                markdown: options.markdown ? mdTransformer.transformFunctions([serialized]) : []
-                            });
-                        }
+                        currentModule.functions.push({
+                            markdown: mdTransformer.transformFunctions([new FunctionSerializer(child).serialize()]),
+                            data: new FunctionSerializer(child).serialize()
+                        });
+                        break;
+                    case TypeDoc.ReflectionKind.TypeAlias:
+                    case TypeDoc.ReflectionKind.Interface:
+                    case TypeDoc.ReflectionKind.Enum:
+                        currentModule.types.push({
+                            markdown: mdTransformer.transformTypes([new TypesSerializer(child).serialize()]),
+                            data: new TypesSerializer(child).serialize()
+                        });
                         break;
                     default:
                         break;

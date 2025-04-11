@@ -6,7 +6,7 @@ export default defineConfig({
     entry: ['./src/index.ts'],
     bundle: true,
     skipNodeModulesBundle: true,
-    format: ['cjs', 'esm'],
+    format: ['esm'],
     shims: true,
     silent: true,
     minify: false,
